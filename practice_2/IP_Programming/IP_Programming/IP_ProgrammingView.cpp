@@ -53,7 +53,7 @@ BOOL CIPProgrammingView::PreCreateWindow(CREATESTRUCT& cs)
 
 // CIPProgrammingView 그리기
 
-void CIPProgrammingView::OnDraw(CDC* /*pDC*/)
+void CIPProgrammingView::OnDraw(CDC* pDC)
 {
 	CIPProgrammingDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -61,6 +61,18 @@ void CIPProgrammingView::OnDraw(CDC* /*pDC*/)
 		return;
 
 	// TODO: 여기에 원시 데이터에 대한 그리기 코드를 추가합니다.
+	if (pDoc->toolbox.io.m_BMPbuf) {
+		StretchDIBits(pDC->GetSafeHdc(),
+			0, 0,
+			pDoc->toolbox.io.m_Width, pDoc->toolbox.io.m_Height,
+			0, 0,
+			pDoc->toolbox.io.m_BMPheader.biWidth,
+			pDoc->toolbox.io.m_BMPheader.biHeight,
+			pDoc->toolbox.io.m_BMPbuf,
+			(LPBITMAPINFO)&pDoc->toolbox.io.m_BMPheader,
+			DIB_RGB_COLORS,
+			SRCCOPY);
+	}
 }
 
 void CIPProgrammingView::OnInitialUpdate()

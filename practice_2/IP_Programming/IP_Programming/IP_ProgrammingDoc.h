@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include "CFileOpenDlg.h"
+#include "CIP_ProgrammingToolBox.h"
+
 
 class CIPProgrammingDoc : public CDocument
 {
@@ -14,9 +17,12 @@ protected: // serialization에서만 만들어집니다.
 
 // 특성입니다.
 public:
+	CIP_ProgrammingToolBox toolbox;
+	FILE* fpInputImage;
 
 // 작업입니다.
 public:
+	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
 
 // 재정의입니다.
 public:

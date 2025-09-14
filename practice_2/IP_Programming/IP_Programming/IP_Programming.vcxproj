@@ -183,7 +183,10 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CFileOpenDlg.h" />
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="CIP_IO.h" />
+    <ClInclude Include="CIP_ProgrammingToolBox.h" />
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
@@ -199,7 +202,10 @@
     <ClInclude Include="ViewTree.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CFileOpenDlg.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="CIP_IO.cpp" />
+    <ClCompile Include="CIP_ProgrammingToolBox.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="IP_Programming.cpp" />

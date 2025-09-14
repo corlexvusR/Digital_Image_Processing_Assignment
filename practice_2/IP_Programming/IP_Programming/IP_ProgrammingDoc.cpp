@@ -136,3 +136,41 @@ void CIPProgrammingDoc::Dump(CDumpContext& dc) const
 
 
 // CIPProgrammingDoc 명령
+
+
+// OnOpenDocument 함수
+BOOL CIPProgrammingDoc::OnOpenDocument(LPCTSTR lpszPathName)
+{
+	if (!CDocument::OnOpenDocument(lpszPathName))
+		return FALSE;
+
+	CFileOpenDlg myDlg;
+	if (myDlg.DoModal() == IDOK) {
+		toolbox.io.m_Width = myDlg.GetWidth();
+		toolbox.io.m_Height = myDlg.GetHeight();
+
+		// 파일 열기
+		errno_t err = _tfopen_s(&fpInputImage, lpszPathName, _T("rb"));
+		if (err != 0 || !fpInputImage) {
+			AfxMessageBox(_T("파일을 열 수 없습니다."));
+			return FALSE;
+		}
+
+		// 메모리 할당
+		toolbox.io.m_Inputbuf =
+			toolbox.io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+
+		// 파일 읽기
+		fread(&toolbox.io.m_Inputbuf[0][0], sizeof(UCHAR),
+			toolbox.io.m_Width * toolbox.io.m_Height, fpInputImage);
+
+		// BMP 변환
+		toolbox.io.IO_MakeGrayImagetoBMP(toolbox.io.m_Inputbuf);
+
+		fclose(fpInputImage);
+		return TRUE;
+	}
+
+	return FALSE;
+}
+

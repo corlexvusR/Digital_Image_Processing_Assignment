@@ -24,6 +24,8 @@ public:
 // 구현입니다.
 public:
 	virtual ~CChildFrame();
+	void SetWindowSize(int width, int height);
+	void AutoResizeToImage(int imageWidth, int imageHeight);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -32,4 +34,5 @@ public:
 // 생성된 메시지 맵 함수
 protected:
 	DECLARE_MESSAGE_MAP()
+	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 };

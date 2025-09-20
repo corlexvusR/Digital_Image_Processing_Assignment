@@ -23,6 +23,11 @@
 IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
+	ON_COMMAND(ID_HISTOGRAM_EQUALIZATION, &CIPProgrammingDoc::OnHistogramEqualization)
+	ON_COMMAND(ID_HISTOGRAM_BRIGHTEN, &CIPProgrammingDoc::OnHistogramBrighten)
+	ON_COMMAND(ID_HISTOGRAM_DARKEN, &CIPProgrammingDoc::OnHistogramDarken)
+	ON_COMMAND(ID_HISTOGRAM_SET_REFERENCE, &CIPProgrammingDoc::OnHistogramSetReference)
+	ON_COMMAND(ID_HISTOGRAM_MATCHING, &CIPProgrammingDoc::OnHistogramMatching)
 END_MESSAGE_MAP()
 
 
@@ -45,6 +50,17 @@ BOOL CIPProgrammingDoc::OnNewDocument()
 
 	// TODO: 여기에 재초기화 코드를 추가합니다.
 	// SDI 문서는 이 문서를 다시 사용합니다.
+	CIPProgrammingApp *pApp = (CIPProgrammingApp*)AfxGetApp();
+	if (pApp->toolbox != NULL) {
+		if (pApp->toolbox->io.m_Outputbuf) {
+			toolbox.io.m_Height = pApp->toolbox->io.m_Height;
+			toolbox.io.m_Width = pApp->toolbox->io.m_Width;
+			toolbox.io.IO_MakeGrayImagetoBMP(pApp->toolbox->io.m_Outputbuf);
+
+			this->SetTitle("Output Image");
+			pApp->toolbox = NULL;
+		}
+	}
 
 	return TRUE;
 }
@@ -174,3 +190,114 @@ BOOL CIPProgrammingDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	return FALSE;
 }
 
+
+void CIPProgrammingDoc::OnHistogramEqualization()
+{
+	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+	if (!toolbox.io.m_Inputbuf)
+		return;
+
+	// 원본 영상 히스토그램 생성
+	float Histogram[256] = { 0, };
+	toolbox.histogram.Histogram_MakeHistogram(toolbox.io.m_Inputbuf, Histogram, toolbox.io.m_Width, toolbox.io.m_Height);
+
+	// 히스토그램 평활화 영상 생성
+	memset(Histogram, 0, sizeof(float) * 256);
+	toolbox.histogram.Histogram_MakeHistogramEqualization(toolbox.io.m_Inputbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+	toolbox.io.m_Outputbuf = toolbox.histogram.m_pucHistEqualImgBuf;
+
+	// 히스토그램 평활화 영상을 새로운 창에 띄우기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnHistogramBrighten()
+{
+	if (!toolbox.io.m_Inputbuf) {
+		AfxMessageBox(_T("입력 영상이 없습니다."));
+		return;
+	}
+
+	// 밝기 증가 (50만큼 밝게)
+	toolbox.histogram.Histogram_BrightnessShift(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height,
+		50);
+
+	toolbox.io.m_Outputbuf = toolbox.histogram.m_pucHistEqualImgBuf;
+
+	// 새 창에서 결과 보기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnHistogramDarken()
+{
+	if (!toolbox.io.m_Inputbuf) {
+		AfxMessageBox(_T("입력 영상이 없습니다."));
+		return;
+	}
+
+	// 밝기 감소 (50만큼 어둡게)
+	toolbox.histogram.Histogram_BrightnessShift(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height,
+		-50);
+
+	toolbox.io.m_Outputbuf = toolbox.histogram.m_pucHistEqualImgBuf;
+
+	// 새 창에서 결과 보기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnHistogramSetReference()
+{
+	if (!toolbox.io.m_Inputbuf) {
+		AfxMessageBox(_T("현재 영상을 참조 영상으로 설정할 입력 영상이 없습니다."));
+		return;
+	}
+
+	// 현재 입력 영상을 참조 영상으로 설정
+	toolbox.SetReferenceImage(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height);
+
+	AfxMessageBox(_T("현재 영상이 참조 영상으로 설정되었습니다."));
+}
+
+void CIPProgrammingDoc::OnHistogramMatching()
+{
+	if (!toolbox.io.m_Inputbuf) {
+		AfxMessageBox(_T("입력 영상이 없습니다."));
+		return;
+	}
+
+	if (!toolbox.m_ReferenceImage) {
+		AfxMessageBox(_T("참조 영상이 설정되지 않았습니다.\n먼저 '참조 영상 설정' 메뉴를 사용하세요."));
+		return;
+	}
+
+	// 크기 확인
+	if (toolbox.io.m_Width != toolbox.m_RefWidth ||
+		toolbox.io.m_Height != toolbox.m_RefHeight) {
+		AfxMessageBox(_T("영상 크기가 참조 영상과 다릅니다."));
+		return;
+	}
+
+	// 히스토그램 매칭 수행
+	toolbox.histogram.Histogram_Matching(toolbox.io.m_Inputbuf,
+		toolbox.m_ReferenceImage,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height);
+
+	toolbox.io.m_Outputbuf = toolbox.histogram.m_pucHistEqualImgBuf;
+
+	// 새 창에서 결과 보기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}

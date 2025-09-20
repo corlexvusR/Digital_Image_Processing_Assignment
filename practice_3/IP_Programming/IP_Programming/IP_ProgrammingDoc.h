@@ -36,6 +36,10 @@ public:
 // 구현입니다.
 public:
 	virtual ~CIPProgrammingDoc();
+	afx_msg void OnHistogramBrighten();
+	afx_msg void OnHistogramDarken();
+	afx_msg void OnHistogramSetReference();
+	afx_msg void OnHistogramMatching();
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
@@ -51,4 +55,6 @@ protected:
 	// 검색 처리기에 대한 검색 콘텐츠를 설정하는 도우미 함수
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
+public:
+	afx_msg void OnHistogramEqualization();
 };

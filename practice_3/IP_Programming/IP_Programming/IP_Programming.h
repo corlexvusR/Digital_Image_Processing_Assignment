@@ -14,8 +14,11 @@
 // 이 클래스의 구현에 대해서는 IP_Programming.cpp을(를) 참조하세요.
 //
 
+class CIP_ProgrammingToolBox;
 class CIPProgrammingApp : public CWinAppEx
 {
+public:
+	CIP_ProgrammingToolBox* toolbox;
 public:
 	CIPProgrammingApp() noexcept;
 

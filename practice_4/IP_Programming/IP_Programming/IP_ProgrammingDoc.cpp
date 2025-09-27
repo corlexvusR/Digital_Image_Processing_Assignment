@@ -25,6 +25,7 @@ IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_DCT_TRANSFORM, &CIPProgrammingDoc::OnDctTransform)
 	ON_COMMAND(ID_DST_TRANSFORM, &CIPProgrammingDoc::OnDstTransform)
+	ON_COMMAND(ID_DCT_SEPARABLE, &CIPProgrammingDoc::OnDctSeparable)
 END_MESSAGE_MAP()
 
 
@@ -369,5 +370,140 @@ void CIPProgrammingDoc::OnDstTransform()
 
 		// 새 창 열기
 		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+	}
+}
+
+// 1차원 DCT를 이용한 변환 및 역변환
+void CIPProgrammingDoc::OnDctSeparable()
+{
+	DCTDlg dlg;
+
+	if (dlg.DoModal() == IDOK) {
+		int m_BlockSize = dlg.m_DlgBlockSize;
+
+		// 블록 크기 유효성 검사
+		bool validBlockSize = false;
+		for (int i = 1; i <= 32; i *= 2) {
+			if (m_BlockSize == i) {
+				validBlockSize = true;
+				break;
+			}
+		}
+
+		if (!validBlockSize) {
+			AfxMessageBox(_T("블록 크기는 1, 2, 4, 8, 16 또는 32만 가능합니다."));
+			return;
+		}
+
+		// 메모리 할당
+		toolbox.dct.m_pucForwardDCTbuf = toolbox.dct.memory_alloc2D_D(toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dct.m_pucTempDCTbuf = toolbox.dct.memory_alloc2D_D(toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dct.FDCTImgbuf = toolbox.dct.memory_alloc2D_UC(toolbox.io.m_Width, toolbox.io.m_Height);
+
+		double** DCT_block = toolbox.dct.memory_alloc2D_D(m_BlockSize, m_BlockSize);
+
+		// Forward Separable DCT 적용
+		for (int i = 0; i < toolbox.io.m_Height; i += m_BlockSize) {
+			for (int j = 0; j < toolbox.io.m_Width; j += m_BlockSize) {
+				// 경계 처리
+				int blockHeight = min(m_BlockSize, toolbox.io.m_Height - i);
+				int blockWidth = min(m_BlockSize, toolbox.io.m_Width - j);
+
+				// 블록 크기가 감소한 경우 처리 안함
+				if (blockHeight != m_BlockSize || blockWidth != m_BlockSize) {
+					continue;
+				}
+
+				// 블록 데이터 복사
+				for (int m = 0; m < m_BlockSize; m++) {
+					for (int n = 0; n < m_BlockSize; n++) {
+						DCT_block[m][n] = (double)toolbox.io.m_Inputbuf[i + m][j + n];
+					}
+				}
+
+				// Separable DCT 적용
+				toolbox.dct.DCT_Separable2D(DCT_block, m_BlockSize, i, j, true);
+			}
+		}
+
+		// 주파수 영역을 그레이 이미지로 변환
+		toolbox.dct.DCT_MakeFrequencytoGray(toolbox.dct.m_pucForwardDCTbuf,
+			toolbox.dct.FDCTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		// 첫 번째 창 (Forward Separable DCT)에 표시
+		CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dct.FDCTImgbuf[i][j];
+			}
+		}
+
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+
+		// Inverse Separable DCT
+		toolbox.dct.m_pucInverseDCTbuf = toolbox.dct.memory_alloc2D_D(toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dct.IDCTImgbuf = toolbox.dct.memory_alloc2D_UC(toolbox.io.m_Width, toolbox.io.m_Height);
+
+		for (int i = 0; i < toolbox.io.m_Height; i += m_BlockSize) {
+			for (int j = 0; j < toolbox.io.m_Width; j += m_BlockSize) {
+				// 경계 처리
+				int blockHeight = min(m_BlockSize, toolbox.io.m_Height - i);
+				int blockWidth = min(m_BlockSize, toolbox.io.m_Width - j);
+
+				// 블록 크기가 감소한 경우 처리 안함
+				if (blockHeight != m_BlockSize || blockWidth != m_BlockSize) {
+					continue;
+				}
+
+				// 블록 데이터 복사
+				for (int m = 0; m < m_BlockSize; m++) {
+					for (int n = 0; n < m_BlockSize; n++) {
+						DCT_block[m][n] = (double)toolbox.dct.m_pucTempDCTbuf[i + m][j + n];
+					}
+				}
+
+				// Separable IDCT 적용
+				toolbox.dct.DCT_Separable2D(DCT_block, m_BlockSize, i, j, false);
+			}
+		}
+
+		// 공간 영역으로 변환
+		toolbox.dct.DCT_MakeFrequencytoGray(toolbox.dct.m_pucInverseDCTbuf,
+			toolbox.dct.IDCTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		// 두 번째 창 (Inverse Separable DCT)에 표시
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dct.IDCTImgbuf[i][j];
+			}
+		}
+
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+
+		// 메모리 해제
+		if (DCT_block) {
+			free(DCT_block[0]);
+			free(DCT_block);
+		}
 	}
 }

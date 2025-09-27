@@ -55,4 +55,5 @@ public:
 	virtual BOOL OnOpenDocument(LPCTSTR IpszPathName);
 	afx_msg void OnDctTransform();
 	afx_msg void OnDstTransform();
+	afx_msg void OnDctSeparable();
 };

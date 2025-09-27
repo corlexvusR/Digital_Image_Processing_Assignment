@@ -19,5 +19,11 @@ public:
 	void DCT_MakeFrequencytoGray(double** imgbuf, UCHAR** buf, int width, int height);	// Frequency -> Gray 변환
 	double** memory_alloc2D_D(int width, int height);	// 2D 메모리 할당
 	UCHAR** memory_alloc2D_UC(int width, int height);	// 2D 메모리 할당
+
+	// 1차원 DCT 관련 메서드
+	void DCT_Separable2D(double** input, int blocksize, int row, int col, bool forward);
+	void DCT_1D_Row(double** data, int blocksize, bool forward);
+	void DCT_1D_Col(double** data, int blocksize, bool forward);
+	void ComparePerformance(UCHAR** imgbuf, int width, int height, int blocksize);
 };
 

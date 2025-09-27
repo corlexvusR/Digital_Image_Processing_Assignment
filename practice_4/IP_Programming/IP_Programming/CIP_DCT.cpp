@@ -193,3 +193,133 @@ void CIP_DCT::DCT_MakeFrequencytoGray(double** imgbuf, UCHAR** buf, int width, i
 		}
 	}
 }
+
+// 분리 가능한 2D DCT
+void CIP_DCT::DCT_Separable2D(double** input, int blocksize, int row, int col, bool forward)
+{
+	// 임시 버퍼 할당
+	double** temp_buf = memory_alloc2D_D(blocksize, blocksize);
+
+	// 입력 데이터를 임시 버퍼로 복사
+	for (int i = 0; i < blocksize; i++) {
+		for (int j = 0; j < blocksize; j++) {
+			temp_buf[i][j] = input[i][j];
+		}
+	}
+
+	if (forward) {
+		// Forward DCT: 행 방향 -> 열 방향
+		DCT_1D_Row(temp_buf, blocksize, true);
+		DCT_1D_Col(temp_buf, blocksize, true);
+
+		// 결과를 전역 버퍼로 복사
+		for (int i = 0; i < blocksize; i++) {
+			for (int j = 0; j < blocksize; j++) {
+				m_pucTempDCTbuf[i + row][j + col] = temp_buf[i][j];
+				m_pucForwardDCTbuf[i + row][j + col] = CLIP(temp_buf[i][j]);
+			}
+		}
+	}
+	else {
+		// Inverse DCT: 열 방향 -> 행 방향
+		DCT_1D_Col(temp_buf, blocksize, false);
+		DCT_1D_Row(temp_buf, blocksize, false);
+
+		// 결과를 전역 버퍼로 복사
+		for (int i = 0; i < blocksize; i++) {
+			for (int j = 0; j < blocksize; j++) {
+				m_pucInverseDCTbuf[i + row][j + col] = CLIP(temp_buf[i][j]);
+			}
+		}
+	}
+
+	// 임시 버퍼 해제
+	if (temp_buf) {
+		free(temp_buf[0]);
+		free(temp_buf);
+	}
+}
+
+// 행 방향 1D DCT
+void CIP_DCT::DCT_1D_Row(double** data, int blocksize, bool forward)
+{
+	double* temp_row = (double*)malloc(sizeof(double) * blocksize);
+
+	for (int y = 0; y < blocksize; y++) {
+		if (forward) {
+			// Forward 1D DCT on rows
+			for (int u = 0; u < blocksize; u++) {
+				double Cu = (u == 0) ? 1.0 / sqrt(blocksize) : sqrt(2.0 / blocksize);
+				double sum = 0.0;
+
+				for (int x = 0; x < blocksize; x++) {
+					sum += data[y][x] * cos((2.0 * x + 1.0) * u * PI / (2.0 * blocksize));
+				}
+
+				temp_row[u] = Cu * sum;
+			}
+		}
+		else {
+			// Inverse 1D DCT on rows
+			for (int x = 0; x < blocksize; x++) {
+				double sum = 0.0;
+
+				for (int u = 0; u < blocksize; u++) {
+					double Cu = (u == 0) ? 1.0 / sqrt(blocksize) : sqrt(2.0 / blocksize);
+					sum += Cu * data[y][u] * cos((2.0 * x + 1.0) * u * PI / (2.0 * blocksize));
+				}
+
+				temp_row[x] = sum;
+			}
+		}
+
+		// 결과를 원래 배열에 복사
+		for (int i = 0; i < blocksize; i++) {
+			data[y][i] = temp_row[i];
+		}
+	}
+
+	free(temp_row);
+}
+
+// 열 방향 1D DCT
+void CIP_DCT::DCT_1D_Col(double** data, int blocksize, bool forward)
+{
+	double* temp_col = (double*)malloc(sizeof(double) * blocksize);
+
+	for (int x = 0; x < blocksize; x++) {
+		if (forward) {
+			// Forward 1D DCT on columns
+			for (int v = 0; v < blocksize; v++) {
+				double Cv = (v == 0) ? 1.0 / sqrt(blocksize) : sqrt(2.0 / blocksize);
+				double sum = 0.0;
+
+				for (int y = 0; y < blocksize; y++) {
+					sum += data[y][x] * cos((2.0 * y + 1.0) * v * PI / (2.0 * blocksize));
+				}
+
+				temp_col[v] = Cv * sum;
+			}
+		}
+		else {
+			// Inverse 1D DCT on columns
+			for (int y = 0; y < blocksize; y++) {
+				double sum = 0.0;
+
+				for (int v = 0; v < blocksize; v++) {
+					double Cv = (v == 0) ? 1.0 / sqrt(blocksize) : sqrt(2.0 / blocksize);
+					sum += Cv * data[v][x] * cos((2.0 * y + 1.0) * v * PI / (2.0 * blocksize));
+				}
+
+				temp_col[y] = sum;
+			}
+		}
+
+		// 결과를 원래 배열에 복사
+		for (int i = 0; i < blocksize; i++) {
+			data[i][x] = temp_col[i];
+		}
+	}
+
+	free(temp_col);
+}

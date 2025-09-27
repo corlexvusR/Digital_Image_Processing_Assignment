@@ -215,6 +215,20 @@ void CIPProgrammingDoc::OnDctTransform()
 	if (dlg.DoModal() == IDOK) {
 		int m_BlockSize = dlg.m_DlgBlockSize;
 
+		// 블록 크기 유효성 검사
+		bool validBlockSize = false;
+		for (int i = 1; i <= 32; i *= 2) {
+			if (m_BlockSize == i) {
+				validBlockSize = true;
+				break;
+			}
+		}
+
+		if (!validBlockSize) {
+			AfxMessageBox(_T("블록 크기는 1, 2, 4, 8, 16 또는 32만 가능합니다."));
+			return;
+		}
+
 		// FDCT
 		toolbox.dct.DCT_MakeBlock(m_BlockSize, 1, toolbox.io.m_Inputbuf,
 			toolbox.io.m_Width, toolbox.io.m_Height);
@@ -225,6 +239,7 @@ void CIPProgrammingDoc::OnDctTransform()
 		CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
 		if (pApp->toolbox != NULL) {
 			delete pApp->toolbox;
+			pApp->toolbox = NULL;
 		}
 
 		pApp->toolbox = new CIP_ProgrammingToolBox();
@@ -245,6 +260,31 @@ void CIPProgrammingDoc::OnDctTransform()
 		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
 
 		// IDCT 처리 (동일한 패턴으로)
-		// ...
+		toolbox.dct.DCT_MakeBlock(m_BlockSize, 0, toolbox.io.m_Inputbuf,
+			toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dct.DCT_MakeFrequencytoGray(toolbox.dct.m_pucInverseDCTbuf,
+			toolbox.dct.IDCTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+
+		// 필요한 데이터만 복사
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+
+		// 출력 버퍼 새로 할당 및 복사
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dct.IDCTImgbuf[i][j];
+			}
+		}
+
+		// 새 창 열기
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
 	}
 }

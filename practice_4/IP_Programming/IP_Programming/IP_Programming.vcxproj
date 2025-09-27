@@ -186,6 +186,7 @@
     <ClInclude Include="CFileOpenDlg.h" />
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="CIP_DCT.h" />
+    <ClInclude Include="CIP_DST.h" />
     <ClInclude Include="CIP_IO.h" />
     <ClInclude Include="CIP_ProgrammingToolBox.h" />
     <ClInclude Include="ClassView.h" />
@@ -207,6 +208,7 @@
     <ClCompile Include="CFileOpenDlg.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="CIP_DCT.cpp" />
+    <ClCompile Include="CIP_DST.cpp" />
     <ClCompile Include="CIP_IO.cpp" />
     <ClCompile Include="CIP_ProgrammingToolBox.cpp" />
     <ClCompile Include="ClassView.cpp" />

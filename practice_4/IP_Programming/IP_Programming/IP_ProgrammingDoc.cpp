@@ -24,6 +24,7 @@ IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_DCT_TRANSFORM, &CIPProgrammingDoc::OnDctTransform)
+	ON_COMMAND(ID_DST_TRANSFORM, &CIPProgrammingDoc::OnDstTransform)
 END_MESSAGE_MAP()
 
 
@@ -281,6 +282,88 @@ void CIPProgrammingDoc::OnDctTransform()
 		for (int i = 0; i < toolbox.io.m_Height; i++) {
 			for (int j = 0; j < toolbox.io.m_Width; j++) {
 				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dct.IDCTImgbuf[i][j];
+			}
+		}
+
+		// 새 창 열기
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+	}
+}
+
+// DST 메뉴를 선택했을 때 실행되는 동작을 정의하기 위한 이벤트 처리 함수
+void CIPProgrammingDoc::OnDstTransform()
+{
+	DCTDlg dlg;  // 동일한 대화상자 재사용 (블록 크기 입력용)
+
+	if (dlg.DoModal() == IDOK) {
+		int m_BlockSize = dlg.m_DlgBlockSize;
+
+		// 블록 크기 유효성 검사
+		bool validBlockSize = false;
+		for (int i = 1; i <= 32; i *= 2) {
+			if (m_BlockSize == i) {
+				validBlockSize = true;
+				break;
+			}
+		}
+
+		if (!validBlockSize) {
+			AfxMessageBox(_T("블록 크기는 1, 2, 4, 8, 16 또는 32만 가능합니다."));
+			return;
+		}
+
+		// FDST
+		toolbox.dst.DST_MakeBlock(m_BlockSize, 1, toolbox.io.m_Inputbuf,
+			toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dst.DST_MakeFrequencytoGray(toolbox.dst.m_pucForwardDSTbuf,
+			toolbox.dst.FDSTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		// 새 창에 표시하기 위한 준비
+		CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+
+		// 필요한 데이터만 복사
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+
+		// 출력 버퍼 새로 할당 및 복사
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dst.FDSTImgbuf[i][j];
+			}
+		}
+
+		// 새 창 열기
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+
+		// IDST 처리
+		toolbox.dst.DST_MakeBlock(m_BlockSize, 0, toolbox.io.m_Inputbuf,
+			toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dst.DST_MakeFrequencytoGray(toolbox.dst.m_pucInverseDSTbuf,
+			toolbox.dst.IDSTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+
+		// 필요한 데이터만 복사
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+
+		// 출력 버퍼 새로 할당 및 복사
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dst.IDSTImgbuf[i][j];
 			}
 		}
 

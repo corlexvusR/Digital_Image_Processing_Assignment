@@ -56,4 +56,5 @@ public:
 	afx_msg void OnDctTransform();
 	afx_msg void OnDstTransform();
 	afx_msg void OnDctSeparable();
+	afx_msg void OnDctPerformance();
 };

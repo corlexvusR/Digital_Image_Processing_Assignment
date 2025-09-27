@@ -2,6 +2,7 @@
 #include "CIP_DCT.h"
 
 #include <cmath>
+#include <chrono>
 
 #define PI 3.14159265
 #define CLIP(x) ((int)(x) > 255 ? 255 : ((int)(x) < 0 ? 0 : (int)(x)))
@@ -322,4 +323,216 @@ void CIP_DCT::DCT_1D_Col(double** data, int blocksize, bool forward)
 	}
 
 	free(temp_col);
+}
+
+// 2D DCT와 Separable DCT의 수행 시간을 측정하여 성능 차이를 비교
+void CIP_DCT::ComparePerformance(UCHAR** imgbuf, int width, int height, int blocksize)
+{
+	// 표준 2D DCT 시간 측정
+	auto start_standard = std::chrono::high_resolution_clock::now();
+
+	// 변수 초기화
+	double** DCT_block = NULL;
+	double** forwardDCT_std = NULL;
+	double** tempDCT_std = NULL;
+	double** forwardDCT_sep = NULL;
+	double** tempDCT_sep = NULL;
+	double* temp_row = NULL;
+	double* temp_col = NULL;
+
+	// 메모리 할당
+	DCT_block = memory_alloc2D_D(blocksize, blocksize);
+	if (!DCT_block) {
+		AfxMessageBox(_T("메모리 할당 실패"));
+		return;
+	}
+
+	forwardDCT_std = memory_alloc2D_D(width, height);
+	if (!forwardDCT_std) {
+		free(DCT_block[0]); free(DCT_block);
+		AfxMessageBox(_T("메모리 할당 실패"));
+		return;
+	}
+
+	tempDCT_std = memory_alloc2D_D(width, height);
+	if (!tempDCT_std) {
+		free(DCT_block[0]); free(DCT_block);
+		free(forwardDCT_std[0]); free(forwardDCT_std);
+		AfxMessageBox(_T("메모리 할당 실패"));
+		return;
+	}
+
+	// 표준 DCT 수행
+	for (int i = 0; i < height; i += blocksize) {
+		for (int j = 0; j < width; j += blocksize) {
+			// 경계 조건 확인
+			int blockHeight = min(blocksize, height - i);
+			int blockWidth = min(blocksize, width - j);
+
+			if (blockHeight != blocksize || blockWidth != blocksize) {
+				continue; // 처리하지 않음
+			}
+
+			// 블록 데이터 복사
+			for (int m = 0; m < blocksize; m++) {
+				for (int n = 0; n < blocksize; n++) {
+					DCT_block[m][n] = (double)imgbuf[i + m][j + n];
+				}
+			}
+
+			// 2D DCT 계산
+			for (int u = 0; u < blocksize; u++) {
+				double Cu = (u == 0) ? 1.0 / sqrt((double)blocksize) : sqrt(2.0 / blocksize);
+
+				for (int v = 0; v < blocksize; v++) {
+					double Cv = (v == 0) ? 1.0 / sqrt((double)blocksize) : sqrt(2.0 / blocksize);
+					double sum = 0.0;
+
+					for (int y = 0; y < blocksize; y++) {
+						for (int x = 0; x < blocksize; x++) {
+							double cosVal1 = cos((2.0 * y + 1.0) * u * PI / (2.0 * blocksize));
+							double cosVal2 = cos((2.0 * x + 1.0) * v * PI / (2.0 * blocksize));
+							sum += DCT_block[y][x] * cosVal1 * cosVal2;
+						}
+					}
+
+					if (u + i < height && v + j < width) {
+						tempDCT_std[u + i][v + j] = Cu * Cv * sum;
+					}
+				}
+			}
+		}
+	}
+
+	auto end_standard = std::chrono::high_resolution_clock::now();
+	auto duration_standard = std::chrono::duration_cast<std::chrono::microseconds>(end_standard - start_standard);
+
+	// 표준 DCT 메모리 해제
+	free(forwardDCT_std[0]); free(forwardDCT_std); forwardDCT_std = NULL;
+	free(tempDCT_std[0]); free(tempDCT_std); tempDCT_std = NULL;
+
+	// 분리형 DCT 시간 측정
+	auto start_separable = std::chrono::high_resolution_clock::now();
+
+	forwardDCT_sep = memory_alloc2D_D(width, height);
+	if (!forwardDCT_sep) {
+		free(DCT_block[0]); free(DCT_block);
+		AfxMessageBox(_T("메모리 할당 실패"));
+		return;
+	}
+
+	tempDCT_sep = memory_alloc2D_D(width, height);
+	if (!tempDCT_sep) {
+		free(DCT_block[0]); free(DCT_block);
+		free(forwardDCT_sep[0]); free(forwardDCT_sep);
+		AfxMessageBox(_T("메모리 할당 실패"));
+		return;
+	}
+
+	// 분리형 DCT 수행
+	for (int i = 0; i < height; i += blocksize) {
+		for (int j = 0; j < width; j += blocksize) {
+			// 경계 조건 확인
+			int blockHeight = min(blocksize, height - i);
+			int blockWidth = min(blocksize, width - j);
+
+			if (blockHeight != blocksize || blockWidth != blocksize) {
+				continue; // 처리하지 않음
+			}
+
+			// 블록 데이터 복사
+			for (int m = 0; m < blocksize; m++) {
+				for (int n = 0; n < blocksize; n++) {
+					DCT_block[m][n] = (double)imgbuf[i + m][j + n];
+				}
+			}
+
+			// 행 방향 1D DCT
+			temp_row = (double*)malloc(sizeof(double) * blocksize);
+			if (!temp_row) {
+				free(DCT_block[0]); free(DCT_block);
+				free(forwardDCT_sep[0]); free(forwardDCT_sep);
+				free(tempDCT_sep[0]); free(tempDCT_sep);
+				AfxMessageBox(_T("메모리 할당 실패"));
+				return;
+			}
+
+			for (int y = 0; y < blocksize; y++) {
+				for (int u = 0; u < blocksize; u++) {
+					double Cu = (u == 0) ? 1.0 / sqrt((double)blocksize) : sqrt(2.0 / blocksize);
+					double sum = 0.0;
+
+					for (int x = 0; x < blocksize; x++) {
+						sum += DCT_block[y][x] * cos((2.0 * x + 1.0) * u * PI / (2.0 * blocksize));
+					}
+
+					temp_row[u] = Cu * sum;
+				}
+
+				for (int x = 0; x < blocksize; x++) {
+					DCT_block[y][x] = temp_row[x];
+				}
+			}
+			free(temp_row); temp_row = NULL;
+
+			// 열 방향 1D DCT
+			temp_col = (double*)malloc(sizeof(double) * blocksize);
+			if (!temp_col) {
+				free(DCT_block[0]); free(DCT_block);
+				free(forwardDCT_sep[0]); free(forwardDCT_sep);
+				free(tempDCT_sep[0]); free(tempDCT_sep);
+				AfxMessageBox(_T("메모리 할당 실패"));
+				return;
+			}
+
+			for (int x = 0; x < blocksize; x++) {
+				for (int v = 0; v < blocksize; v++) {
+					double Cv = (v == 0) ? 1.0 / sqrt((double)blocksize) : sqrt(2.0 / blocksize);
+					double sum = 0.0;
+
+					for (int y = 0; y < blocksize; y++) {
+						sum += DCT_block[y][x] * cos((2.0 * y + 1.0) * v * PI / (2.0 * blocksize));
+					}
+
+					temp_col[v] = Cv * sum;
+				}
+
+				for (int y = 0; y < blocksize; y++) {
+					DCT_block[y][x] = temp_col[y];
+				}
+			}
+			free(temp_col); temp_col = NULL;
+
+			// 결과 저장
+			for (int m = 0; m < blocksize; m++) {
+				for (int n = 0; n < blocksize; n++) {
+					if (i + m < height && j + n < width) {
+						tempDCT_sep[i + m][j + n] = DCT_block[m][n];
+					}
+				}
+			}
+		}
+	}
+
+	auto end_separable = std::chrono::high_resolution_clock::now();
+	auto duration_separable = std::chrono::duration_cast<std::chrono::microseconds>(end_separable - start_separable);
+
+	// 메모리 해제
+	free(DCT_block[0]); free(DCT_block);
+	free(forwardDCT_sep[0]); free(forwardDCT_sep);
+	free(tempDCT_sep[0]); free(tempDCT_sep);
+
+	// 결과 표시
+	double standard_time_ms = duration_standard.count() / 1000.0;  // ms로 변환
+	double separable_time_ms = duration_separable.count() / 1000.0;  // ms로 변환
+	double speedup = standard_time_ms / separable_time_ms;
+
+	CString result;
+	result.Format(_T("성능 비교 결과:\n")
+		_T("표준 2D DCT: %.3f ms\n")
+		_T("분리형 DCT: %.3f ms\n")
+		_T("속도 향상: %.2f배"),
+		standard_time_ms, separable_time_ms, speedup);
+
+	AfxMessageBox(result);
 }

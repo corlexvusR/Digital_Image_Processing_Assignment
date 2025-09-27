@@ -26,6 +26,7 @@ BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_DCT_TRANSFORM, &CIPProgrammingDoc::OnDctTransform)
 	ON_COMMAND(ID_DST_TRANSFORM, &CIPProgrammingDoc::OnDstTransform)
 	ON_COMMAND(ID_DCT_SEPARABLE, &CIPProgrammingDoc::OnDctSeparable)
+	ON_COMMAND(ID_DCT_PERFORMANCE, &CIPProgrammingDoc::OnDctPerformance)
 END_MESSAGE_MAP()
 
 
@@ -505,5 +506,39 @@ void CIPProgrammingDoc::OnDctSeparable()
 			free(DCT_block[0]);
 			free(DCT_block);
 		}
+	}
+}
+
+// 2D DCT와 Separable DCT의 수행 시간을 측정하여 성능 차이를 비교
+void CIPProgrammingDoc::OnDctPerformance()
+{
+	if (!toolbox.io.m_Inputbuf) {
+		AfxMessageBox(_T("먼저 이미지를 로드해주세요."));
+		return;
+	}
+
+	DCTDlg dlg;
+	if (dlg.DoModal() == IDOK) {
+		int m_BlockSize = dlg.m_DlgBlockSize;
+
+		// 블록 크기 유효성 검사
+		bool validBlockSize = false;
+		for (int i = 1; i <= 32; i *= 2) {
+			if (m_BlockSize == i) {
+				validBlockSize = true;
+				break;
+			}
+		}
+
+		if (!validBlockSize) {
+			AfxMessageBox(_T("블록 크기는 1, 2, 4, 8, 16 또는 32만 가능합니다."));
+			return;
+		}
+
+		// 성능 비교 실행
+		toolbox.dct.ComparePerformance(toolbox.io.m_Inputbuf,
+			toolbox.io.m_Width,
+			toolbox.io.m_Height,
+			m_BlockSize);
 	}
 }

@@ -66,6 +66,12 @@
     <ClInclude Include="CIP_IO.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="CIP_DCT.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DCTDlg.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="IP_Programming.cpp">
@@ -108,6 +114,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="CIP_IO.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="CIP_DCT.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="DCTDlg.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>

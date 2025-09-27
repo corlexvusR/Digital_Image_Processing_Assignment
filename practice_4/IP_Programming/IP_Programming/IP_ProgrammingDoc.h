@@ -7,6 +7,7 @@
 
 #include "CFileOpenDlg.h"
 #include "CIP_ProgrammingToolBox.h"
+#include "DCTDlg.h"
 
 
 class CIPProgrammingDoc : public CDocument
@@ -22,7 +23,6 @@ public:
 
 // 작업입니다.
 public:
-	virtual BOOL OnOpenDocument(LPCTSTR lpszPathName);
 
 // 재정의입니다.
 public:
@@ -51,4 +51,7 @@ protected:
 	// 검색 처리기에 대한 검색 콘텐츠를 설정하는 도우미 함수
 	void SetSearchContent(const CString& value);
 #endif // SHARED_HANDLERS
+public:
+	virtual BOOL OnOpenDocument(LPCTSTR IpszPathName);
+	afx_msg void OnDctTransform();
 };

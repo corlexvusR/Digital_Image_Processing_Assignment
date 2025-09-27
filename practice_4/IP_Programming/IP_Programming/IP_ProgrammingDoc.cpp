@@ -23,6 +23,7 @@
 IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
+	ON_COMMAND(ID_DCT_TRANSFORM, &CIPProgrammingDoc::OnDctTransform)
 END_MESSAGE_MAP()
 
 
@@ -38,6 +39,7 @@ CIPProgrammingDoc::~CIPProgrammingDoc()
 {
 }
 
+// 새 창이 열리면 결과 영상을 출력하는 멤버 함수
 BOOL CIPProgrammingDoc::OnNewDocument()
 {
 	if (!CDocument::OnNewDocument())
@@ -45,7 +47,38 @@ BOOL CIPProgrammingDoc::OnNewDocument()
 
 	// TODO: 여기에 재초기화 코드를 추가합니다.
 	// SDI 문서는 이 문서를 다시 사용합니다.
+	
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	if (pApp->toolbox != NULL) {
+		if (pApp->toolbox->io.m_Outputbuf) {
+			// 결과 이미지 데이터 복사 - 깊은 복사
+			toolbox.io.m_Height = pApp->toolbox->io.m_Height;
+			toolbox.io.m_Width = pApp->toolbox->io.m_Width;
 
+			// 버퍼가 이미 존재하는지 확인 후 해제
+			if (toolbox.io.m_Outputbuf) {
+				free(toolbox.io.m_Outputbuf[0]);
+				free(toolbox.io.m_Outputbuf);
+				toolbox.io.m_Outputbuf = NULL;
+			}
+
+			// 새로 메모리 할당하고 데이터 복사
+			toolbox.io.m_Outputbuf = toolbox.io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+			for (int i = 0; i < toolbox.io.m_Height; i++) {
+				for (int j = 0; j < toolbox.io.m_Width; j++) {
+					toolbox.io.m_Outputbuf[i][j] = pApp->toolbox->io.m_Outputbuf[i][j];
+				}
+			}
+
+			// BMP 변환
+			toolbox.io.IO_MakeGrayImagetoBMP(toolbox.io.m_Outputbuf);
+			this->SetTitle(_T("Output Image"));
+
+			// 메모리 해제
+			delete pApp->toolbox;
+			pApp->toolbox = NULL;
+		}
+	}
 	return TRUE;
 }
 
@@ -174,3 +207,44 @@ BOOL CIPProgrammingDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	return FALSE;
 }
 
+// DCT 메뉴를 선택했을 때 실행되는 동작을 정의하기 위한 이벤트 처리 함수
+void CIPProgrammingDoc::OnDctTransform()
+{
+	DCTDlg dlg;
+
+	if (dlg.DoModal() == IDOK) {
+		int m_BlockSize = dlg.m_DlgBlockSize;
+
+		// FDCT
+		toolbox.dct.DCT_MakeBlock(m_BlockSize, 1, toolbox.io.m_Inputbuf,
+			toolbox.io.m_Width, toolbox.io.m_Height);
+		toolbox.dct.DCT_MakeFrequencytoGray(toolbox.dct.m_pucForwardDCTbuf,
+			toolbox.dct.FDCTImgbuf, toolbox.io.m_Width, toolbox.io.m_Height);
+
+		// 새 창에 표시하기 위한 준비
+		CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+		if (pApp->toolbox != NULL) {
+			delete pApp->toolbox;
+		}
+
+		pApp->toolbox = new CIP_ProgrammingToolBox();
+
+		// 필요한 데이터만 복사
+		pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+		pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+
+		// 출력 버퍼 새로 할당 및 복사
+		pApp->toolbox->io.m_Outputbuf = pApp->toolbox->io.memory_alloc2D(toolbox.io.m_Width, toolbox.io.m_Height);
+		for (int i = 0; i < toolbox.io.m_Height; i++) {
+			for (int j = 0; j < toolbox.io.m_Width; j++) {
+				pApp->toolbox->io.m_Outputbuf[i][j] = toolbox.dct.FDCTImgbuf[i][j];
+			}
+		}
+
+		// 새 창 열기
+		AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+
+		// IDCT 처리 (동일한 패턴으로)
+		// ...
+	}
+}

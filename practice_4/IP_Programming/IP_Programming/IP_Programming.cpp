@@ -17,6 +17,8 @@
 #define new DEBUG_NEW
 #endif
 
+#include "CIP_ProgrammingToolBox.h"
+
 
 // CIPProgrammingApp
 

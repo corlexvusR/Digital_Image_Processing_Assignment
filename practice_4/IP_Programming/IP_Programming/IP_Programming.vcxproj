@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -185,9 +185,11 @@
   <ItemGroup>
     <ClInclude Include="CFileOpenDlg.h" />
     <ClInclude Include="ChildFrm.h" />
+    <ClInclude Include="CIP_DCT.h" />
     <ClInclude Include="CIP_IO.h" />
     <ClInclude Include="CIP_ProgrammingToolBox.h" />
     <ClInclude Include="ClassView.h" />
+    <ClInclude Include="DCTDlg.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IP_Programming.h" />
@@ -204,9 +206,11 @@
   <ItemGroup>
     <ClCompile Include="CFileOpenDlg.cpp" />
     <ClCompile Include="ChildFrm.cpp" />
+    <ClCompile Include="CIP_DCT.cpp" />
     <ClCompile Include="CIP_IO.cpp" />
     <ClCompile Include="CIP_ProgrammingToolBox.cpp" />
     <ClCompile Include="ClassView.cpp" />
+    <ClCompile Include="DCTDlg.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="IP_Programming.cpp" />
     <ClCompile Include="IP_ProgrammingDoc.cpp" />

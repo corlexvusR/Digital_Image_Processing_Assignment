@@ -12,6 +12,7 @@
 #include "ChildFrm.h"
 #include "IP_ProgrammingDoc.h"
 #include "IP_ProgrammingView.h"
+#include "CIP_ProgrammingToolBox.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,6 +37,8 @@ CIPProgrammingApp::CIPProgrammingApp() noexcept
 {
 	m_bHiColorIcons = TRUE;
 
+	// ToolBox 생성 - 프로그램 실행 중 한 번만
+	toolbox = new CIP_ProgrammingToolBox();
 
 	m_nAppLook = 0;
 	// 다시 시작 관리자 지원
@@ -53,6 +56,16 @@ CIPProgrammingApp::CIPProgrammingApp() noexcept
 
 	// TODO: 여기에 생성 코드를 추가합니다.
 	// InitInstance에 모든 중요한 초기화 작업을 배치합니다.
+}
+
+// 소멸자
+CIPProgrammingApp::~CIPProgrammingApp()
+{
+	if (toolbox != NULL)
+	{
+		delete toolbox;
+		toolbox = NULL;
+	}
 }
 
 // 유일한 CIPProgrammingApp 개체입니다.
@@ -171,7 +184,7 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg() noexcept;
 
-// 대화 상자 데이터입니다.
+	// 대화 상자 데이터입니다.
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
@@ -179,7 +192,7 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 지원입니다.
 
-// 구현입니다.
+	// 구현입니다.
 protected:
 	DECLARE_MESSAGE_MAP()
 };
@@ -226,6 +239,3 @@ void CIPProgrammingApp::SaveCustomState()
 }
 
 // CIPProgrammingApp 메시지 처리기
-
-
-

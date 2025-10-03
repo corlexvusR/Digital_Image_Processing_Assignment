@@ -187,6 +187,7 @@
     <ClInclude Include="ChildFrm.h" />
     <ClInclude Include="CIP_IO.h" />
     <ClInclude Include="CIP_ProgrammingToolBox.h" />
+    <ClInclude Include="CIP_Sobel.h" />
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="ChildFrm.cpp" />
     <ClCompile Include="CIP_IO.cpp" />
     <ClCompile Include="CIP_ProgrammingToolBox.cpp" />
+    <ClCompile Include="CIP_Sobel.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="IP_Programming.cpp" />

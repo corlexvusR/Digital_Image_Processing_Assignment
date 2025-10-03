@@ -23,6 +23,7 @@
 IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
+	ON_COMMAND(ID_FILTERING_SOBEL, &CIPProgrammingDoc::OnFilteringSobel)
 END_MESSAGE_MAP()
 
 
@@ -42,6 +43,27 @@ BOOL CIPProgrammingDoc::OnNewDocument()
 {
 	if (!CDocument::OnNewDocument())
 		return FALSE;
+
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+
+	if (pApp->toolbox != NULL && pApp->toolbox->io.m_Outputbuf != NULL)
+	{
+		// 출력 영상 설정
+		toolbox.io.m_Height = pApp->toolbox->io.m_Height;
+		toolbox.io.m_Width = pApp->toolbox->io.m_Width;
+		
+		// 출력 버퍼를 현재 Document의 입력으로 설정
+		toolbox.io.m_Inputbuf = pApp->toolbox->io.m_Outputbuf;
+
+		// BMP로 변환
+		toolbox.io.IO_MakeGrayImagetoBMP(toolbox.io.m_Inputbuf);
+
+		// 제목 설정
+		this->SetTitle("Output Image");
+
+		// 출력 버퍼 초기화
+		pApp->toolbox->io.m_Outputbuf = NULL;
+	}
 
 	// TODO: 여기에 재초기화 코드를 추가합니다.
 	// SDI 문서는 이 문서를 다시 사용합니다.
@@ -174,3 +196,25 @@ BOOL CIPProgrammingDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	return FALSE;
 }
 
+
+void CIPProgrammingDoc::OnFilteringSobel()
+{
+	// 입력 영상이 없으면 리턴
+	if (toolbox.io.m_Inputbuf == NULL)
+		return;
+
+	// 소벨 필터링 수행
+	toolbox.sobel.SobelFiltering(toolbox.io.m_Inputbuf, toolbox.io.m_Height, toolbox.io.m_Width);
+
+	// 출력 버퍼에 결과 저장
+	toolbox.io.m_Outputbuf = toolbox.sobel.m_pucSobelFilteringImgbuf;
+
+	// 새 창 열기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox->io.m_Height = toolbox.io.m_Height;
+	pApp->toolbox->io.m_Width = toolbox.io.m_Width;
+	pApp->toolbox->io.m_Outputbuf = toolbox.sobel.m_pucSobelFilteringImgbuf;
+
+	// 새 창 생성
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}

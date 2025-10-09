@@ -25,6 +25,7 @@ IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_FILTERING_SOBEL, &CIPProgrammingDoc::OnFilteringSobel)
 	ON_COMMAND(ID_FILTERING_LOG, &CIPProgrammingDoc::OnFilteringLog)
+	ON_COMMAND(ID_FILTERING_MEDIAN, &CIPProgrammingDoc::OnFilteringMedian)
 END_MESSAGE_MAP()
 
 
@@ -233,6 +234,23 @@ void CIPProgrammingDoc::OnFilteringLog()
 		sigma);
 
 	toolbox.io.m_Outputbuf = toolbox.log.m_pucLoGFilteringImgbuf;
+
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+// Median 필터링
+void CIPProgrammingDoc::OnFilteringMedian()
+{
+	if (toolbox.io.m_Inputbuf == NULL)
+		return;
+
+	int window_size = 3;  // 3x3, 5x5, 7x7 등으로 변경 가능
+
+	toolbox.median.MedianFiltering(toolbox.io.m_Inputbuf, toolbox.io.m_Height, toolbox.io.m_Width, window_size);
+
+	toolbox.io.m_Outputbuf = toolbox.median.m_pucMedianFilteringImgbuf;
 
 	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
 	pApp->toolbox = &toolbox;

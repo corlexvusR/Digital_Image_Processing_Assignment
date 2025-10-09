@@ -55,4 +55,5 @@ protected:
 public:
 	afx_msg void OnFilteringSobel();
 	afx_msg void OnFilteringLog();
+	afx_msg void OnFilteringMedian();
 };

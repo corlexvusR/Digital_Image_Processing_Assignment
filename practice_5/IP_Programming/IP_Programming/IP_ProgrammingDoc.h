@@ -54,4 +54,5 @@ protected:
 #endif // SHARED_HANDLERS
 public:
 	afx_msg void OnFilteringSobel();
+	afx_msg void OnFilteringLog();
 };

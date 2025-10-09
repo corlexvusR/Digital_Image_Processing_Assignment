@@ -24,6 +24,7 @@ IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_FILTERING_SOBEL, &CIPProgrammingDoc::OnFilteringSobel)
+	ON_COMMAND(ID_FILTERING_LOG, &CIPProgrammingDoc::OnFilteringLog)
 END_MESSAGE_MAP()
 
 
@@ -216,5 +217,24 @@ void CIPProgrammingDoc::OnFilteringSobel()
 	pApp->toolbox->io.m_Outputbuf = toolbox.sobel.m_pucSobelFilteringImgbuf;
 
 	// 새 창 생성
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnFilteringLog()
+{
+	if (toolbox.io.m_Inputbuf == NULL)
+		return;
+
+	double sigma = 1.4;  // 가우시안 표준편차 (표준 편차 조정 가능)
+
+	toolbox.log.LoGFiltering(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Height,
+		toolbox.io.m_Width,
+		sigma);
+
+	toolbox.io.m_Outputbuf = toolbox.log.m_pucLoGFilteringImgbuf;
+
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
 	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
 }

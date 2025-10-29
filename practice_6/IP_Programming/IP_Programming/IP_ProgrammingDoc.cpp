@@ -27,6 +27,7 @@ BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_FILTERING_LOG, &CIPProgrammingDoc::OnFilteringLog)
 	ON_COMMAND(ID_FILTERING_MEDIAN, &CIPProgrammingDoc::OnFilteringMedian)
 	ON_COMMAND(ID_LINEDETECTION_HOUGHTRANSFORM, &CIPProgrammingDoc::OnLinedetectionHoughtransform)
+	ON_COMMAND(ID_LINEDETECTION_CANNYHOUGHTRANSFORM, &CIPProgrammingDoc::OnLinedetectionCannyhoughtransform)
 END_MESSAGE_MAP()
 
 
@@ -275,6 +276,30 @@ void CIPProgrammingDoc::OnLinedetectionHoughtransform()
 	toolbox.hough.HoughTransform(toolbox.io.m_Inputbuf, toolbox.sobel.m_pucSobelFilteringImgbuf, toolbox.io.m_Height, toolbox.io.m_Width);
 
 	// 4. 결과를 출력 버퍼에 설정
+	toolbox.io.m_Outputbuf = toolbox.hough.m_pucLineDetectionImgBuf;
+
+	// 5. 새 창으로 결과 표시
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnLinedetectionCannyhoughtransform()
+{
+    // TODO: 여기에 명령 처리기 코드를 추가합니다.
+
+	// 1. 입력 영상 확인
+	if (toolbox.io.m_Inputbuf == NULL) {
+		return;
+	}
+
+	// 2. 캐니 경계선 검출 
+	toolbox.canny.CannyEdgeDetection(toolbox.io.m_Inputbuf, toolbox.io.m_Height, toolbox.io.m_Width, 0.5, 1);
+
+	// 3. 허프 변환으로 직선 검출
+	toolbox.hough.HoughTransform(toolbox.io.m_Inputbuf, toolbox.canny.m_pucCannyEdgeImgBuf, toolbox.io.m_Height, toolbox.io.m_Width);
+
+	// 4. 결과 출력
 	toolbox.io.m_Outputbuf = toolbox.hough.m_pucLineDetectionImgBuf;
 
 	// 5. 새 창으로 결과 표시

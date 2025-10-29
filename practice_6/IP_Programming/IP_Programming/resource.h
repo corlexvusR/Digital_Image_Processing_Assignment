@@ -92,13 +92,14 @@
 #define ID_FILTERING_LOG                32772
 #define ID_FILTERING_MEDIAN             32773
 #define ID_LINEDETECTION_HOUGHTRANSFORM 32774
+#define ID_LINEDETECTION_CANNYHOUGHTRANSFORM 32775
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        312
-#define _APS_NEXT_COMMAND_VALUE         32775
+#define _APS_NEXT_COMMAND_VALUE         32776
 #define _APS_NEXT_CONTROL_VALUE         1002
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

@@ -56,4 +56,5 @@ public:
 	afx_msg void OnFilteringSobel();
 	afx_msg void OnFilteringLog();
 	afx_msg void OnFilteringMedian();
+	afx_msg void OnLinedetectionHoughtransform();
 };

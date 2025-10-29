@@ -3,6 +3,7 @@
 #include "CIP_Sobel.h"
 #include "IP_LoG.h"
 #include "IP_Median.h"
+#include "IP_Hough.h"
 
 class CIP_ProgrammingToolBox
 {
@@ -11,6 +12,7 @@ public:
     CIP_Sobel sobel;
     CIP_LoG log;
     CIP_Median median;
+    CIP_Hough hough;
 
 public:
     CIP_ProgrammingToolBox(void);

@@ -191,6 +191,7 @@
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="IP_Hough.h" />
     <ClInclude Include="IP_LoG.h" />
     <ClInclude Include="IP_Median.h" />
     <ClInclude Include="IP_Programming.h" />
@@ -212,6 +213,7 @@
     <ClCompile Include="CIP_Sobel.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
+    <ClCompile Include="IP_Hough.cpp" />
     <ClCompile Include="IP_LoG.cpp" />
     <ClCompile Include="IP_Median.cpp" />
     <ClCompile Include="IP_Programming.cpp" />

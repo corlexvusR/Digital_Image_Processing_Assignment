@@ -28,6 +28,7 @@ BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_FILTERING_MEDIAN, &CIPProgrammingDoc::OnFilteringMedian)
 	ON_COMMAND(ID_LINEDETECTION_HOUGHTRANSFORM, &CIPProgrammingDoc::OnLinedetectionHoughtransform)
 	ON_COMMAND(ID_LINEDETECTION_CANNYHOUGHTRANSFORM, &CIPProgrammingDoc::OnLinedetectionCannyhoughtransform)
+	ON_COMMAND(ID_CORNERDETECTION_HESSIANCORNERDETECTION, &CIPProgrammingDoc::OnCornerdetectionHessiancornerdetection)
 END_MESSAGE_MAP()
 
 
@@ -303,6 +304,36 @@ void CIPProgrammingDoc::OnLinedetectionCannyhoughtransform()
 	toolbox.io.m_Outputbuf = toolbox.hough.m_pucLineDetectionImgBuf;
 
 	// 5. 새 창으로 결과 표시
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+// 헤시안 매트릭스를 통한 코너점 추출하기
+void CIPProgrammingDoc::OnCornerdetectionHessiancornerdetection()
+{
+	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+	if (toolbox.io.m_Inputbuf == NULL) {
+		AfxMessageBox(_T("먼저 영상을 열어주세요."));
+		return;
+	}
+
+	// 헤시안 코너 검출 수행
+	toolbox.hessian.HessianCornerDetection(toolbox.io.m_Inputbuf,
+											toolbox.io.m_Height,
+											toolbox.io.m_Width,
+											0.01);  // threshold ratio
+
+	// 검출된 코너 개수 출력
+	CString msg;
+	msg.Format(_T("검출된 코너 개수: %d"),
+		(int)toolbox.hessian.m_detectedCorners.size());
+	AfxMessageBox(msg);
+
+	// 결과를 출력 버퍼에 설정
+	toolbox.io.m_Outputbuf = toolbox.hessian.m_pucCornerImgBuf;
+
+	// 새 창으로 결과 표시
 	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
 	pApp->toolbox = &toolbox;
 	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);

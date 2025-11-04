@@ -192,6 +192,7 @@
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IP_Canny.h" />
+    <ClInclude Include="IP_Hessian.h" />
     <ClInclude Include="IP_Hough.h" />
     <ClInclude Include="IP_LoG.h" />
     <ClInclude Include="IP_Median.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="IP_Canny.cpp" />
+    <ClCompile Include="IP_Hessian.cpp" />
     <ClCompile Include="IP_Hough.cpp" />
     <ClCompile Include="IP_LoG.cpp" />
     <ClCompile Include="IP_Median.cpp" />

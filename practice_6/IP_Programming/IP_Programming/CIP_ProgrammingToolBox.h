@@ -5,6 +5,7 @@
 #include "IP_Median.h"
 #include "IP_Hough.h"
 #include "IP_Canny.h"
+#include "IP_Hessian.h"
 
 class CIP_ProgrammingToolBox
 {
@@ -15,6 +16,7 @@ public:
     CIP_Median median;
     CIP_Hough hough;
     CIP_Canny canny;
+    CIP_Hessian hessian;
 
 public:
     CIP_ProgrammingToolBox(void);

@@ -58,4 +58,5 @@ public:
 	afx_msg void OnFilteringMedian();
 	afx_msg void OnLinedetectionHoughtransform();
 	afx_msg void OnLinedetectionCannyhoughtransform();
+	afx_msg void OnCornerdetectionHessiancornerdetection();
 };

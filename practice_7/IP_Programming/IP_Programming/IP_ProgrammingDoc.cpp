@@ -23,6 +23,8 @@
 IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
+	ON_COMMAND(ID_MORPHOLOGY_CLOSING, &CIPProgrammingDoc::OnMorphologyClosing)
+	ON_COMMAND(ID_MORPHOLOGY_OPENING, &CIPProgrammingDoc::OnMorphologyOpening)
 END_MESSAGE_MAP()
 
 
@@ -43,8 +45,25 @@ BOOL CIPProgrammingDoc::OnNewDocument()
 	if (!CDocument::OnNewDocument())
 		return FALSE;
 
-	// TODO: 여기에 재초기화 코드를 추가합니다.
-	// SDI 문서는 이 문서를 다시 사용합니다.
+	// 앱 포인터 가져오기
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+
+	if (pApp->toolbox != NULL) {
+		if (pApp->toolbox->io.m_Outputbuf) {
+			// 출력 이미지 정보 설정
+			toolbox.io.m_Height = pApp->toolbox->io.m_Height;
+			toolbox.io.m_Width = pApp->toolbox->io.m_Width;
+
+			// BMP 형식으로 변환하여 표시
+			toolbox.io.IO_MakeGrayImagetoBMP(pApp->toolbox->io.m_Outputbuf);
+
+			// 창 제목 설정
+			this->SetTitle("Output Image");
+
+			// 툴박스 포인터 초기화
+			pApp->toolbox = NULL;
+		}
+	}
 
 	return TRUE;
 }
@@ -174,3 +193,47 @@ BOOL CIPProgrammingDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	return FALSE;
 }
 
+
+void CIPProgrammingDoc::OnMorphologyClosing()
+{
+	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+
+	// 입력 영상 확인
+	if (toolbox.io.m_Inputbuf == NULL)
+		return;
+
+	// 닫힘 연산 수행
+	toolbox.morphology.Morphology_Closing(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height);
+
+	// 결과를 출력 버퍼에 설정
+	toolbox.io.m_Outputbuf = toolbox.morphology.m_MorphologyBuf;
+
+	// 새 창에 결과 표시
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnMorphologyOpening()
+{
+	// TODO: 여기에 명령 처리기 코드를 추가합니다.
+
+	// 입력 영상 확인
+	if (toolbox.io.m_Inputbuf == NULL)
+		return;
+
+	// 열림 연산 수행
+	toolbox.morphology.Morphology_Opening(toolbox.io.m_Inputbuf,
+		toolbox.io.m_Width,
+		toolbox.io.m_Height);
+
+	// 결과를 출력 버퍼에 설정
+	toolbox.io.m_Outputbuf = toolbox.morphology.m_MorphologyBuf;
+
+	// 새 창에 결과 표시
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}

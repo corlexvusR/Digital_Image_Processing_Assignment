@@ -190,6 +190,7 @@
     <ClInclude Include="ClassView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="IP_Morphology.h" />
     <ClInclude Include="IP_Programming.h" />
     <ClInclude Include="IP_ProgrammingDoc.h" />
     <ClInclude Include="IP_ProgrammingView.h" />
@@ -208,6 +209,7 @@
     <ClCompile Include="CIP_ProgrammingToolBox.cpp" />
     <ClCompile Include="ClassView.cpp" />
     <ClCompile Include="FileView.cpp" />
+    <ClCompile Include="IP_Morphology.cpp" />
     <ClCompile Include="IP_Programming.cpp" />
     <ClCompile Include="IP_ProgrammingDoc.cpp" />
     <ClCompile Include="IP_ProgrammingView.cpp" />

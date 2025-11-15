@@ -25,6 +25,7 @@ IMPLEMENT_DYNCREATE(CIPProgrammingDoc, CDocument)
 BEGIN_MESSAGE_MAP(CIPProgrammingDoc, CDocument)
 	ON_COMMAND(ID_MORPHOLOGY_CLOSING, &CIPProgrammingDoc::OnMorphologyClosing)
 	ON_COMMAND(ID_MORPHOLOGY_OPENING, &CIPProgrammingDoc::OnMorphologyOpening)
+	ON_COMMAND(ID_MORPHOLOGY_EDGEEXTRACTION, &CIPProgrammingDoc::OnMorphologyEdgeextraction)
 END_MESSAGE_MAP()
 
 
@@ -228,6 +229,25 @@ void CIPProgrammingDoc::OnMorphologyOpening()
 	toolbox.morphology.Morphology_Opening(toolbox.io.m_Inputbuf,
 		toolbox.io.m_Width,
 		toolbox.io.m_Height);
+
+	// 결과를 출력 버퍼에 설정
+	toolbox.io.m_Outputbuf = toolbox.morphology.m_MorphologyBuf;
+
+	// 새 창에 결과 표시
+	CIPProgrammingApp* pApp = (CIPProgrammingApp*)AfxGetApp();
+	pApp->toolbox = &toolbox;
+	AfxGetMainWnd()->SendMessage(WM_COMMAND, ID_FILE_NEW);
+}
+
+void CIPProgrammingDoc::OnMorphologyEdgeextraction()
+{
+	// 입력 영상 확인
+	if (toolbox.io.m_Inputbuf == NULL) {
+		return;
+	}
+
+	// 경계 추출 수행
+	toolbox.morphology.Morphology_EdgeExtraction(toolbox.io.m_Inputbuf, toolbox.io.m_Width, toolbox.io.m_Height);
 
 	// 결과를 출력 버퍼에 설정
 	toolbox.io.m_Outputbuf = toolbox.morphology.m_MorphologyBuf;

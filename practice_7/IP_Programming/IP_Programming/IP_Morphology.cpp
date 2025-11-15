@@ -173,3 +173,82 @@ void CIP_Morphology::Morphology_Opening(UCHAR** input, int width, int height)
     Morphology_Erosion(width, height);
     Morphology_Dilation(width, height);
 }
+
+// 내부 침식 함수 (침식 결과를 별도 버퍼에 저장하는 함수)
+UCHAR** CIP_Morphology::Internal_Erosion(UCHAR** input, int width, int height)
+{
+    // 결과를 저장할 새 버퍼 할당
+    UCHAR** result = memory_alloc2D(height, width);
+
+    // 입력 영상을 결과 버퍼에 복사
+    for (int i = 0; i < height; i++) {
+        memcpy(result[i], input[i], sizeof(UCHAR) * width);
+    }
+
+    // 구조 요소 정의
+    int masksize = 3;
+    UCHAR mask[3][3] =
+    {
+        { 0, 1, 0 },
+        { 1, 1, 1 },
+        { 0, 1, 0 }
+    };
+
+    // 패딩된 버퍼 생성
+    UCHAR** Padded_Imgbuf = memory_alloc2D(height + (masksize >> 1), width + (masksize >> 1));
+
+    // 입력을 패딩 버퍼에 복사
+    for (int i = 1; i <= height; i++) {
+        memcpy(&Padded_Imgbuf[i][masksize >> 1], input[i - 1], sizeof(UCHAR) * width);
+    }
+
+    // 침식 연산
+    for (int i = 1; i < height - 1; i++) {
+        for (int j = 1; j < width - 1; j++) {
+            if (Padded_Imgbuf[i][j] >= 128) {  // 배경(흰색)인 경우
+                for (int m = 0; m < masksize; m++) {
+                    for (int n = 0; n < masksize; n++) {
+                        if (mask[m][n] == 1) {
+                            result[i + m - 1][j + n - 1] = 255;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 임시 버퍼 해제
+    free(Padded_Imgbuf[0]);
+    free(Padded_Imgbuf);
+
+    return result;
+}
+
+// 경계 추출 함수
+void CIP_Morphology::Morphology_EdgeExtraction(UCHAR** input, int width, int height)
+{
+    // 메모리 할당
+    if (!m_MorphologyBuf) {
+        m_MorphologyBuf = memory_alloc2D(height, width);
+    }
+
+    // 침식 영상 생성
+    UCHAR** eroded = Internal_Erosion(input, width, height);
+
+    // 경계 추출: 원본 - 침식
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            // 원본이 객체(검은색)이고 침식 결과가 배경(흰색)인 경우가 "경계"임
+            if (input[i][j] < 128 && eroded[i][j] >= 128) {
+                m_MorphologyBuf[i][j] = 0;  // 경계선 (검은색)
+            }
+            else {
+                m_MorphologyBuf[i][j] = 255;  // 배경 (흰색)
+            }
+        }
+    }
+
+    // 침식 버퍼 해제
+    free(eroded[0]);
+    free(eroded);
+}

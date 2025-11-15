@@ -54,4 +54,5 @@ protected:
 public:
 	afx_msg void OnMorphologyClosing();
 	afx_msg void OnMorphologyOpening();
+	afx_msg void OnMorphologyEdgeextraction();
 };

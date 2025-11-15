@@ -19,4 +19,11 @@ public:
     void Morphology_Erosion(int width, int height);    // 침식
     void Morphology_Closing(UCHAR** input, int width, int height);  // 닫힘
     void Morphology_Opening(UCHAR** input, int width, int height);  // 열림
+
+    // 경계 추출 함수
+    void Morphology_EdgeExtraction(UCHAR** input, int width, int height);
+
+private:
+    // 내부 침식 함수
+    UCHAR** Internal_Erosion(UCHAR** input, int width, int height);
 };
